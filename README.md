@@ -48,4 +48,4 @@ Note with the classic IMEs, we use the following steps to enter "漢字".
 
 From the text editor's point of view, just "漢字" is inserted at Step 5. When you undo Step 4, you can not get "かんじ" back with classic IMEs, which are very stressful especially for non-professional typists.
 
-For modeless IMEs to work, it is crucial that an application supports surrounding text operations like Gtk.TextView does. It seems increasing numbers of text editors support surrounding text operations these days. Various characters of many languages would be entered in the similar manner presented here. The support for the smart undo/redo would be one of the next step to go.
+For modeless IMEs to work, it is crucial that an application supports surrounding text operations like Gtk.TextView does. It seems increasing numbers of text editors support surrounding text operations these days. Various characters of many languages would be entered in the similar manner presented here. The support for the smart undo/redo would be one of the next steps to go.
