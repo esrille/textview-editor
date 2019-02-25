@@ -106,7 +106,7 @@ class EditorWindow(Gtk.ApplicationWindow):
     def is_opened(self, file):
         windows = self.get_application().get_windows()
         for window in windows:
-            if window.file.equal(file):
+            if window.file and window.file.equal(file):
                 return window
         return None
 
