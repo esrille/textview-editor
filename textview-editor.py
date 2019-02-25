@@ -22,7 +22,7 @@ import time
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gio, Gtk, Gdk, GObject, Pango
+from gi.repository import GLib, Gio, Gtk, Gdk, GObject, Pango
 
 
 class EditorWindow(Gtk.ApplicationWindow):
@@ -54,6 +54,7 @@ class EditorWindow(Gtk.ApplicationWindow):
 
         self.textview = Gtk.TextView()
         self.textview.set_wrap_mode(Gtk.WrapMode.WORD)
+        self.textview.set_monospace(True)
 
         self.buffer = self.textview.get_buffer()
         if content:
@@ -89,6 +90,11 @@ class EditorWindow(Gtk.ApplicationWindow):
             action.connect("activate", method)
             self.add_action(action)
         self.connect("delete-event", self.on_delete_event)
+
+        wordwrap_action = Gio.SimpleAction.new_stateful(
+            "wordwrap", None, GLib.Variant.new_boolean(True))
+        wordwrap_action.connect("activate", self.wordwrap_callback)
+        self.add_action(wordwrap_action)
 
         self.set_file(file)
 
@@ -340,6 +346,14 @@ class EditorWindow(Gtk.ApplicationWindow):
             if font:
                 self.textview.modify_font(Pango.font_description_from_string(font))
         dialog.destroy()
+
+    def wordwrap_callback(self, action, parameter):
+        wordwrap = not action.get_state()
+        action.set_state(GLib.Variant.new_boolean(wordwrap))
+        if wordwrap:
+            self.textview.set_wrap_mode(Gtk.WrapMode.WORD)
+        else:
+            self.textview.set_wrap_mode(Gtk.WrapMode.NONE)
 
     def about_callback(self, action, parameter):
         dialog = Gtk.AboutDialog()
