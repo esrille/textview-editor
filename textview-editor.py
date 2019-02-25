@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, see <http://www.gnu.org/licenses/>.
 
-
+import os
 import sys
 import time
 
@@ -367,7 +367,8 @@ class EditorApplication(Gtk.Application):
         Gtk.Application.do_startup(self)
         builder = Gtk.Builder()
         try:
-            builder.add_from_file("textview-editor.menu.ui")
+            menu_ui = os.path.splitext(sys.argv[0])[0] + ".menu.ui"
+            builder.add_from_file(menu_ui)
         except GObject.GError as e:
             print("Error: " + e.message)
             sys.exit()
