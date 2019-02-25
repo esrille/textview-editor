@@ -22,7 +22,7 @@ import time
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gio, Gtk, Gdk, GObject
+from gi.repository import Gio, Gtk, Gdk, GObject, Pango
 
 
 class EditorWindow(Gtk.ApplicationWindow):
@@ -81,6 +81,7 @@ class EditorWindow(Gtk.ApplicationWindow):
             "copy": self.copy_callback,
             "paste": self.paste_callback,
             "selectall": self.select_all_callback,
+            "font": self.font_callback,
             "about": self.about_callback,
         }
         for name, method in actions.items():
@@ -328,6 +329,17 @@ class EditorWindow(Gtk.ApplicationWindow):
     def select_all_callback(self, action, parameter):
         start, end = self.buffer.get_bounds()
         self.buffer.select_range(start, end)
+
+    def font_callback(self, action, parameter):
+        dialog = Gtk.FontChooserDialog("Font", self)
+        style = self.textview.get_style()
+        dialog.set_font_desc(style.font_desc)
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            font = dialog.get_font()
+            if font:
+                self.textview.modify_font(Pango.font_description_from_string(font))
+        dialog.destroy()
 
     def about_callback(self, action, parameter):
         dialog = Gtk.AboutDialog()
