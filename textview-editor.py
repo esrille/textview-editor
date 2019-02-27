@@ -46,15 +46,35 @@ class EditorWindow(Gtk.ApplicationWindow):
         super().__init__(application=app)
         self.set_default_size(720, 400)
 
+        self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+
+        grid = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.add(grid)
+
         scrolled_window = Gtk.ScrolledWindow()
+        scrolled_window.set_hexpand(True)
+        scrolled_window.set_vexpand(True)
         scrolled_window.set_policy(
             Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-
-        self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 
         self.textview = Gtk.TextView()
         self.textview.set_wrap_mode(Gtk.WrapMode.WORD)
         self.textview.set_monospace(True)
+        self.textview.connect("focus-in-event", self.on_focus_in)
+
+        scrolled_window.add(self.textview)
+        grid.pack_start(scrolled_window, True, True, 0)
+
+        self.searchbar = Gtk.SearchBar()
+        # We use Gtk.Entry since Gtk.SearchEntry does not support IME
+        # at this point.
+        searchentry = Gtk.Entry()
+        self.searchbar.add(searchentry)
+        self.searchbar.connect_entry(searchentry)
+        grid.pack_start(self.searchbar, False, False, 0)
+        self.searchbar.set_search_mode(False)
+        searchentry.connect("focus-out-event", self.on_searchbar_focus_out)
+        searchentry.connect("activate", self.on_find)
 
         self.buffer = self.textview.get_buffer()
         if content:
@@ -65,9 +85,6 @@ class EditorWindow(Gtk.ApplicationWindow):
         self.buffer.connect("delete_range", self.on_delete)
         self.buffer.connect("begin_user_action", self.on_begin_user_action)
         self.buffer.connect("end_user_action", self.on_end_user_action)
-
-        scrolled_window.add(self.textview)
-        self.add(scrolled_window)
 
         actions = {
             "new": self.new_callback,
@@ -81,6 +98,7 @@ class EditorWindow(Gtk.ApplicationWindow):
             "cut": self.cut_callback,
             "copy": self.copy_callback,
             "paste": self.paste_callback,
+            "find": self.find_callback,
             "selectall": self.select_all_callback,
             "font": self.font_callback,
             "about": self.about_callback,
@@ -275,7 +293,7 @@ class EditorWindow(Gtk.ApplicationWindow):
         return self.confirm_save_changes()
 
     def undo_callback(self, action, parameter):
-        if not self.undo:
+        if not self.undo or not self.textview.is_focus():
             return
         action = self.undo.pop()
         if action[0] == "insert_text":
@@ -297,7 +315,7 @@ class EditorWindow(Gtk.ApplicationWindow):
         self.redo.append(action)
 
     def redo_callback(self, action, parameter):
-        if not self.redo:
+        if not self.redo or not self.textview.is_focus():
             return
         action = self.redo.pop()
         if action[0] == "insert_text":
@@ -332,6 +350,39 @@ class EditorWindow(Gtk.ApplicationWindow):
             self.buffer.insert_at_cursor(text)
             self.buffer.end_user_action()
 
+    def on_focus_in(self, widget, event):
+        self.searchbar.set_search_mode(False)
+        return False
+
+    def find_callback(self, action, parameter):
+        self.searchbar.set_search_mode(True)
+        self.searchbar.grab_focus()
+
+    def on_find(self, entry):
+        cursor_mark = self.buffer.get_insert()
+        start = self.buffer.get_iter_at_mark(cursor_mark)
+        selecton_mark = self.buffer.get_selection_bound()
+        selected = self.buffer.get_iter_at_mark(selecton_mark)
+        if start.get_offset() < selected.get_offset():
+            start = selected
+
+        match = start.forward_search(entry.get_text(), 0, None)
+        if match is not None:
+            match_start, match_end = match
+            self.buffer.select_range(match_start, match_end)
+        else:
+            start = self.buffer.get_start_iter()
+            match = start.forward_search(entry.get_text(), 0, None)
+            if match is not None:
+                match_start, match_end = match
+                self.buffer.select_range(match_start, match_end)
+
+    def on_searchbar_focus_out(self, widget, event):
+        # Take the focus back to textview from somewhere
+        # after searchbar is closed.
+        self.textview.grab_focus()
+        return False
+
     def select_all_callback(self, action, parameter):
         start, end = self.buffer.get_bounds()
         self.buffer.select_range(start, end)
@@ -344,7 +395,8 @@ class EditorWindow(Gtk.ApplicationWindow):
         if response == Gtk.ResponseType.OK:
             font = dialog.get_font()
             if font:
-                self.textview.modify_font(Pango.font_description_from_string(font))
+                self.textview.modify_font(
+                    Pango.font_description_from_string(font))
         dialog.destroy()
 
     def wordwrap_callback(self, action, parameter):

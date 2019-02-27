@@ -14,11 +14,17 @@ $ ./textview-editor.py [filename...]
 
 TextView Editor is a simple [GTK](https://www.gtk.org/) 3 based text editor written in Python.
 
-In TextView Editor, a [Gtk.Application](https://python-gtk-3-tutorial.readthedocs.io/en/latest/application.html) manages multiple [Gtk.ApplicationWindow](https://developer.gnome.org/gtk3/stable/GtkApplicationWindow.html)s. Each application window contains only a [Gtk.ScrolledWindow](https://developer.gnome.org/pygtk/stable/class-gtkscrolledwindow.html) widget and a [Gtk.TextView](https://developer.gnome.org/pygtk/stable/class-gtktextview.html) widget.
+The menu bar at the top of each window includes File, Edit, Search, Settings and Help menus. Each menu provides essential features of text editors such as cut, copy, and paste. When you select Search/Find…, the search bar slides in from the bottom of the window. Hit the enter key to find the next match.
 
-The menu bar at the top of each window includes File, Edit, and Help menus. Each menu provides essential features of text editors such as cut, copy, and paste.
+In TextView Editor, a [Gtk.Application](https://python-gtk-3-tutorial.readthedocs.io/en/latest/application.html) manages multiple [Gtk.ApplicationWindow](https://developer.gnome.org/gtk3/stable/GtkApplicationWindow.html)s. Each application window has the following widget hierarchy.
 
-Basic text editing features are provided by Gtk.TextView and its [Gtk.TextBuffer](https://developer.gnome.org/pygtk/stable/class-gtktextbuffer.html). One feature that is missing in Gtk.TextView and Gtk.TextBuffer is the ability to undo and redo. TextView Editor provides an edit history feature by monitoring "insert_text" and "delete_range" signals raised from Gtk.TextBuffer.
+- [Gtk.Box](https://lazka.github.io/pgi-docs/Gtk-3.0/classes/Box.html)
+    - [Gtk.ScrolledWindow](https://developer.gnome.org/pygtk/stable/class-gtkscrolledwindow.html)
+        - [Gtk.TextView](https://developer.gnome.org/pygtk/stable/class-gtktextview.html)
+    - [Gtk.SearchBar](https://developer.gnome.org/gtk3/stable/GtkSearchBar.html)
+        - [Gtk.Entry](https://developer.gnome.org/pygtk/stable/class-gtkentry.html)
+
+Basic text editing features are provided by Gtk.TextView and its [Gtk.TextBuffer](https://developer.gnome.org/pygtk/stable/class-gtktextbuffer.html). One feature that is missing is the ability to undo and redo. TextView Editor provides an edit history feature by monitoring "insert_text" and "delete_range" signals raised from Gtk.TextBuffer.
 
 TextView Editor is released under the GNU Lesser General Public License. Simple text editors would have been a good starting point to learn about GUI programming. TextView Editor is intended to be one of those programs.
 
