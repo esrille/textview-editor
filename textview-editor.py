@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2019  Esrille Inc.
@@ -19,6 +19,8 @@
 import os
 import sys
 import time
+import locale
+import json
 
 import gi
 gi.require_version('Gtk', '3.0')
@@ -27,11 +29,11 @@ from gi.repository import GLib, Gio, Gtk, Gdk, GObject, Pango
 
 class EditorWindow(Gtk.ApplicationWindow):
 
-    title = "TextView Editor"
 
     def __init__(self, app, file=None):
         content = ""
 
+        self.title = _("TextView Editor")
         self.user_action = False
         self.undo = []  # undo buffer
         self.redo = []  # redo buffer
@@ -160,7 +162,7 @@ class EditorWindow(Gtk.ApplicationWindow):
 
     def open_callback(self, action, parameter):
         open_dialog = Gtk.FileChooserDialog(
-            "Pick a file", self,
+            _("Open File"), self,
             Gtk.FileChooserAction.OPEN,
             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
              Gtk.STOCK_OPEN, Gtk.ResponseType.ACCEPT))
@@ -187,17 +189,17 @@ class EditorWindow(Gtk.ApplicationWindow):
 
     def add_filters(self, dialog):
         filter_text = Gtk.FileFilter()
-        filter_text.set_name("Text files")
+        filter_text.set_name(_("Text files"))
         filter_text.add_mime_type("text/plain")
         dialog.add_filter(filter_text)
 
         filter_py = Gtk.FileFilter()
-        filter_py.set_name("Python files")
+        filter_py.set_name(_("Python files"))
         filter_py.add_mime_type("text/x-python")
         dialog.add_filter(filter_py)
 
         filter_any = Gtk.FileFilter()
-        filter_any.set_name("Any files")
+        filter_any.set_name(_("Any files"))
         filter_any.add_pattern("*")
         dialog.add_filter(filter_any)
 
@@ -226,7 +228,7 @@ class EditorWindow(Gtk.ApplicationWindow):
 
     def save_as(self):
         dialog = Gtk.FileChooserDialog(
-            "Pick a file", self,
+            _("Save File"), self,
             Gtk.FileChooserAction.SAVE,
             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
              Gtk.STOCK_SAVE, Gtk.ResponseType.ACCEPT))
@@ -250,10 +252,10 @@ class EditorWindow(Gtk.ApplicationWindow):
             return False
         dialog = Gtk.MessageDialog(
             self, 0, Gtk.MessageType.QUESTION,
-            Gtk.ButtonsType.NONE, "Save changes to this document?")
+            Gtk.ButtonsType.NONE, _("Save changes to this document?"))
         dialog.format_secondary_text(
-            "If you don't, changes will be lost.")
-        dialog.add_button("Close _Without Saving", Gtk.ResponseType.NO)
+            _("If you don't, changes will be lost."))
+        dialog.add_button(_("Close _Without Saving"), Gtk.ResponseType.NO)
         dialog.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
         dialog.add_button(Gtk.STOCK_SAVE, Gtk.ResponseType.YES)
         dialog.set_default_response(Gtk.ResponseType.YES)
@@ -388,7 +390,8 @@ class EditorWindow(Gtk.ApplicationWindow):
         self.buffer.select_range(start, end)
 
     def font_callback(self, action, parameter):
-        dialog = Gtk.FontChooserDialog("Font", self)
+        dialog = Gtk.FontChooserDialog(_("Font"), self)
+        dialog.props.preview_text = _("The quick brown fox jumps over the lazy dog.")
         style = self.textview.get_style()
         dialog.set_font_desc(style.font_desc)
         response = dialog.run()
@@ -437,6 +440,15 @@ class EditorApplication(Gtk.Application):
                          flags=Gio.ApplicationFlags.HANDLES_OPEN,
                          **kwargs)
 
+        self.lang = locale.getdefaultlocale()[0]
+        filename = os.path.splitext(sys.argv[0])[0] + '.' + self.lang + ".json"
+        try:
+            with open(filename, 'r') as file:
+                self.uitexts = json.load(file)
+        except OSError as e:
+            print("Error: " + e.strerror)
+            self.uitexts = {}
+
     def do_activate(self):
         win = EditorWindow(self)
         win.show_all()
@@ -444,18 +456,33 @@ class EditorApplication(Gtk.Application):
     def do_startup(self):
         Gtk.Application.do_startup(self)
         builder = Gtk.Builder()
+        filename = os.path.splitext(sys.argv[0])[0] + '.menu.' + self.lang + ".ui"
         try:
-            menu_ui = os.path.splitext(sys.argv[0])[0] + ".menu.ui"
-            builder.add_from_file(menu_ui)
+            builder.add_from_file(filename)
         except GObject.GError as e:
             print("Error: " + e.message)
-            sys.exit()
+            try:
+                filename = os.path.splitext(sys.argv[0])[0] + ".menu.ui"
+                builder.add_from_file(filename)
+            except GObject.GError as e:
+                print("Error: " + e.message)
+                sys.exit()
         self.set_menubar(builder.get_object("menubar"))
 
     def do_open(self, files, *hint):
         for file in files:
             win = EditorWindow(self, file=file)
             win.show_all()
+
+    def get_text(self, string):
+        if string in self.uitexts:
+            return self.uitexts[string]
+        return string
+
+
+# i18n
+def _(string):
+    return app.get_text(string)
 
 
 app = EditorApplication()

@@ -3,102 +3,102 @@
   <!-- interface-requires gtk+ 3.0 -->
   <menu id="menubar">
     <submenu>
-      <attribute name="label">_File</attribute>
+      <attribute name="label">ファイル(_F)</attribute>
       <section>
         <item>
-          <attribute name="label">_New Window</attribute>
+          <attribute name="label">あたらしい文章をつくる(_N)</attribute>
           <attribute name="action">win.new</attribute>
           <attribute name="accel">&lt;Primary&gt;n</attribute>
         </item>
         <item>
-          <attribute name="label">_Open…</attribute>
+          <attribute name="label">ファイルをひらく(_O)…</attribute>
           <attribute name="action">win.open</attribute>
           <attribute name="accel">&lt;Primary&gt;o</attribute>
         </item>
       </section>
       <section>
         <item>
-          <attribute name="label">_Save</attribute>
+          <attribute name="label">文章をセーブする(_S)</attribute>
           <attribute name="action">win.save</attribute>
           <attribute name="accel">&lt;Primary&gt;s</attribute>
         </item>
         <item>
-          <attribute name="label">Save _As…</attribute>
+          <attribute name="label">文章になまえをつけてセーブする(_A)…</attribute>
           <attribute name="action">win.saveas</attribute>
         </item>
       </section>
       <section>
         <item>
-          <attribute name="label">_Close</attribute>
+          <attribute name="label">ウィンドウをとじる(_C)</attribute>
           <attribute name="action">win.close</attribute>
           <attribute name="accel">&lt;Primary&gt;w</attribute>
         </item>
         <item>
-          <attribute name="label">Clos_e All</attribute>
+          <attribute name="label">すべてのウィンドウをとじる(_E)</attribute>
           <attribute name="action">win.closeall</attribute>
         </item>
       </section>
     </submenu>
     <submenu>
-      <attribute name="label">_Edit</attribute>
+      <attribute name="label">編集(_E)</attribute>
       <section>
         <item>
-          <attribute name="label">_Undo</attribute>
+          <attribute name="label">まえの操作をとりけす(_U)</attribute>
           <attribute name="action">win.undo</attribute>
           <attribute name="accel">&lt;Primary&gt;z</attribute>
         </item>
         <item>
-          <attribute name="label">Re_do</attribute>
+          <attribute name="label">とりけした操作をやりなおす(_D)</attribute>
           <attribute name="action">win.redo</attribute>
           <attribute name="accel">&lt;Primary&gt;&lt;Shift&gt;z</attribute>
         </item>
       </section>
       <section>
         <item>
-          <attribute name="label">Cu_t</attribute>
+          <attribute name="label">えらんだ字句をひかえて、きりとる(_T)</attribute>
           <attribute name="action">win.cut</attribute>
         </item>
         <item>
-          <attribute name="label">_Copy</attribute>
+          <attribute name="label">えらんだ字句をひかえておく(_C)</attribute>
           <attribute name="action">win.copy</attribute>
         </item>
         <item>
-          <attribute name="label">_Paste</attribute>
+          <attribute name="label">ひかえておいた字句をはりつける(_P)</attribute>
           <attribute name="action">win.paste</attribute>
         </item>
       </section>
       <section>
         <item>
-          <attribute name="label">Select _All</attribute>
+          <attribute name="label">文章全体をえらぶ(_A)</attribute>
           <attribute name="action">win.selectall</attribute>
         </item>
       </section>
       <section>
         <item>
-          <attribute name="label">_Find…</attribute>
+          <attribute name="label">字句をみつける(_F)…</attribute>
           <attribute name="action">win.find</attribute>
           <attribute name="accel">&lt;Primary&gt;f</attribute>
         </item>
       </section>
     </submenu>
     <submenu>
-      <attribute name="label">_Settings</attribute>
+      <attribute name="label">設定(_S)</attribute>
       <section>
         <item>
-          <attribute name="label">_Font…</attribute>
+          <attribute name="label">フォントをかえる(_F)…</attribute>
           <attribute name="action">win.font</attribute>
         </item>
         <item>
-          <attribute name="label">_Word Wrap</attribute>
+          <attribute name="label">行のおりかえし(_W)</attribute>
           <attribute name="action">win.wordwrap</attribute>
         </item>
       </section>
     </submenu>
     <submenu>
-      <attribute name="label">_Help</attribute>
+      <attribute name="label">ヘルプ(_H)</attribute>
       <section>
         <item>
-          <attribute name="label">_About…</attribute>
+          <attribute name="label">TextView エディターについて(_A)…</attribute>
           <attribute name="action">win.about</attribute>
           <attribute name="accel">F1</attribute>
         </item>
