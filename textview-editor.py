@@ -29,7 +29,6 @@ from gi.repository import GLib, Gio, Gtk, Gdk, GObject, Pango
 
 class EditorWindow(Gtk.ApplicationWindow):
 
-
     def __init__(self, app, file=None):
         content = ""
 
