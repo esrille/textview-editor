@@ -8,7 +8,7 @@ $ ./textview-editor.py [filename...]
 
 ## Screenshot
 
-![screenshot of a TextView Editor window](textview-editor.png)
+![screenshot of a TextView Editor window](screenshot.png)
 
 ## Description
 
