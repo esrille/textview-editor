@@ -422,6 +422,7 @@ class EditorWindow(Gtk.ApplicationWindow):
         dialog.set_documenters(documenters)
         dialog.set_website("http://www.esrille.com/")
         dialog.set_website_label("Esrille Inc.")
+        dialog.set_logo_icon_name("textview-editor")
 
         # to close the dialog when "close" is clicked, e.g. on RPi,
         # we connect the "response" signal to about_response_callback
@@ -439,13 +440,18 @@ class EditorApplication(Gtk.Application):
                          flags=Gio.ApplicationFlags.HANDLES_OPEN,
                          **kwargs)
 
+        self.resourcedir = os.path.dirname(sys.argv[0])
+        if not sys.argv[0].endswith(".py"):
+            # application has been installed
+            self.resourcedir = os.path.dirname(self.resourcedir)
+            self.resourcedir += '/share/textview-editor'
+
         self.lang = locale.getdefaultlocale()[0]
-        filename = os.path.splitext(sys.argv[0])[0] + '.' + self.lang + ".json"
+        filename = self.resourcedir + "/textview-editor." + self.lang + ".json"
         try:
             with open(filename, 'r') as file:
                 self.uitexts = json.load(file)
         except OSError as e:
-            print("Error: " + e.strerror)
             self.uitexts = {}
 
     def do_activate(self):
@@ -455,13 +461,12 @@ class EditorApplication(Gtk.Application):
     def do_startup(self):
         Gtk.Application.do_startup(self)
         builder = Gtk.Builder()
-        filename = os.path.splitext(sys.argv[0])[0] + '.menu.' + self.lang + ".ui"
+        filename = self.resourcedir + "/textview-editor.menu." + self.lang + ".ui"
         try:
             builder.add_from_file(filename)
         except GObject.GError as e:
-            print("Error: " + e.message)
             try:
-                filename = os.path.splitext(sys.argv[0])[0] + ".menu.ui"
+                filename =  self.resourcedir + "/textview-editor.menu.ui"
                 builder.add_from_file(filename)
             except GObject.GError as e:
                 print("Error: " + e.message)

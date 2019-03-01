@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=TextView Editor
+Comment=A Simple GTK 3 based Text Editor written in Python
+Comment[ja]=PythonでかいたGTK 3ベースのテキストエディター
+Icon=textview-editor
+Exec=textview-editor %F
+Terminal=false
+Categories=Utility;TextEditor;
+MimeType=text/plain;

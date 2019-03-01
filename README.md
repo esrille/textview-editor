@@ -3,18 +3,32 @@
 ## Usage
 
 ```
-$ ./textview-editor.py [filename...]
+$ textview-editor [filename...]
 ```
 
 ## Screenshot
 
 ![screenshot of a TextView Editor window](screenshot.png)
 
+## Install TextView Editor
+
+```
+$ git clone https://github.com/esrille/textview-editor.git
+$ make
+$ sudo make install
+```
+
+To uninstall, use:
+
+```
+$ sudo make uninstall
+```
+
 ## Description
 
-TextView Editor is a simple [GTK](https://www.gtk.org/) 3 based text editor written in Python.
+![TextView Editor icon](textview-editor.png) TextView Editor is a simple [GTK](https://www.gtk.org/) 3 based text editor written in Python.
 
-The menu bar at the top of each window includes File, Edit, Search, Settings and Help menus. Each menu provides essential features of text editors such as cut, copy, and paste. When you select Search/Find…, the search bar slides in from the bottom of the window. Hit the enter key to find the next match.
+The menu bar at the top of each window includes File, Edit, Settings and Help menus. Each menu provides essential features of text editors such as cut, copy, and paste. When you select Search/Find…, the search bar slides in from the bottom of the window. Hit the enter key to find the next match.
 
 In TextView Editor, a [Gtk.Application](https://python-gtk-3-tutorial.readthedocs.io/en/latest/application.html) manages multiple [Gtk.ApplicationWindow](https://developer.gnome.org/gtk3/stable/GtkApplicationWindow.html)s. Each application window has the following widget hierarchy.
 
