@@ -366,17 +366,14 @@ class EditorWindow(Gtk.ApplicationWindow):
         selected = self.buffer.get_iter_at_mark(selecton_mark)
         if start.get_offset() < selected.get_offset():
             start = selected
-
         match = start.forward_search(entry.get_text(), 0, None)
+        if match is None:
+            start = self.buffer.get_start_iter()
+            match = start.forward_search(entry.get_text(), 0, None)
         if match is not None:
             match_start, match_end = match
             self.buffer.select_range(match_start, match_end)
-        else:
-            start = self.buffer.get_start_iter()
-            match = start.forward_search(entry.get_text(), 0, None)
-            if match is not None:
-                match_start, match_end = match
-                self.buffer.select_range(match_start, match_end)
+            self.textview.scroll_mark_onscreen(self.buffer.get_insert())
 
     def on_searchbar_focus_out(self, widget, event):
         # Take the focus back to textview from somewhere
