@@ -79,6 +79,11 @@
           <attribute name="action">win.find</attribute>
           <attribute name="accel">&lt;Primary&gt;f</attribute>
         </item>
+        <item>
+          <attribute name="label">字句をおきかえる(_R)…</attribute>
+          <attribute name="action">win.replace</attribute>
+          <attribute name="accel">&lt;Primary&gt;r</attribute>
+        </item>
       </section>
     </submenu>
     <submenu>

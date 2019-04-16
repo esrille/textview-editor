@@ -61,7 +61,6 @@ class EditorWindow(Gtk.ApplicationWindow):
         self.textview = Gtk.TextView()
         self.textview.set_wrap_mode(Gtk.WrapMode.WORD)
         self.textview.set_monospace(True)
-        self.textview.connect("focus-in-event", self.on_focus_in)
 
         scrolled_window.add(self.textview)
         grid.pack_start(scrolled_window, True, True, 0)
@@ -69,13 +68,27 @@ class EditorWindow(Gtk.ApplicationWindow):
         self.searchbar = Gtk.SearchBar()
         # We use Gtk.Entry since Gtk.SearchEntry does not support IME
         # at this point.
-        searchentry = Gtk.Entry()
-        self.searchbar.add(searchentry)
-        self.searchbar.connect_entry(searchentry)
+        self.search_entry = Gtk.Entry()
+        self.searchbar.add(self.search_entry)
+        self.searchbar.connect_entry(self.search_entry)
         grid.pack_start(self.searchbar, False, False, 0)
         self.searchbar.set_search_mode(False)
-        searchentry.connect("focus-out-event", self.on_searchbar_focus_out)
-        searchentry.connect("activate", self.on_find)
+        self.search_entry.connect("activate", self.on_find)
+
+        self.replacebar = Gtk.SearchBar()
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.replacebar.add(box)
+        self.replace_from = Gtk.Entry()
+        box.pack_start(self.replace_from, False, False, 1)
+        self.replace_to = Gtk.Entry()
+        box.pack_start(self.replace_to, False, False, 1)
+        self.replacebar.connect_entry(self.replace_from)
+        grid.pack_start(self.replacebar, False, False, 0)
+        self.replacebar.set_search_mode(False)
+        self.replace_from.connect("activate", self.on_find)
+        self.replace_to.connect("activate", self.on_replace)
+
+        self.connect("key-press-event", self.on_key_press_event)
 
         self.buffer = self.textview.get_buffer()
         if content:
@@ -100,6 +113,7 @@ class EditorWindow(Gtk.ApplicationWindow):
             "copy": self.copy_callback,
             "paste": self.paste_callback,
             "find": self.find_callback,
+            "replace": self.replace_callback,
             "selectall": self.select_all_callback,
             "font": self.font_callback,
             "about": self.about_callback,
@@ -116,6 +130,29 @@ class EditorWindow(Gtk.ApplicationWindow):
         self.add_action(wordwrap_action)
 
         self.set_file(file)
+
+    def on_key_press_event(self, widget, event):
+        # Control focus around search bars by checking keys typed into the
+        # main window
+        if self.search_entry.is_focus():
+            if event.keyval == Gdk.KEY_Escape:
+                self.searchbar.set_search_mode(False)
+                self.textview.grab_focus()
+                return True
+        if self.replace_to.is_focus() or self.replace_from.is_focus():
+            if event.keyval == Gdk.KEY_Tab or event.keyval == Gdk.KEY_ISO_Left_Tab:
+                if self.replace_to.is_focus():
+                    self.replacebar.connect_entry(self.replace_from)
+                    self.replace_from.grab_focus()
+                elif self.replace_from.is_focus():
+                    self.replacebar.connect_entry(self.replace_to)
+                    self.replace_to.grab_focus()
+                return True
+            if event.keyval == Gdk.KEY_Escape:
+                self.replacebar.set_search_mode(False)
+                self.textview.grab_focus()
+                return True
+        return False
 
     def set_file(self, file):
         self.file = file
@@ -351,35 +388,48 @@ class EditorWindow(Gtk.ApplicationWindow):
             self.buffer.insert_at_cursor(text)
             self.buffer.end_user_action()
 
-    def on_focus_in(self, widget, event):
-        self.searchbar.set_search_mode(False)
-        return False
-
     def find_callback(self, action, parameter):
         self.searchbar.set_search_mode(True)
-        self.searchbar.grab_focus()
 
-    def on_find(self, entry):
+    def select_text(self, text):
         cursor_mark = self.buffer.get_insert()
         start = self.buffer.get_iter_at_mark(cursor_mark)
         selecton_mark = self.buffer.get_selection_bound()
         selected = self.buffer.get_iter_at_mark(selecton_mark)
         if start.get_offset() < selected.get_offset():
             start = selected
-        match = start.forward_search(entry.get_text(), 0, None)
+        match = start.forward_search(text, 0, None)
         if match is None:
             start = self.buffer.get_start_iter()
-            match = start.forward_search(entry.get_text(), 0, None)
+            match = start.forward_search(text, 0, None)
         if match is not None:
             match_start, match_end = match
             self.buffer.select_range(match_start, match_end)
             self.textview.scroll_mark_onscreen(self.buffer.get_insert())
+        return match
 
-    def on_searchbar_focus_out(self, widget, event):
-        # Take the focus back to textview from somewhere
-        # after searchbar is closed.
-        self.textview.grab_focus()
-        return False
+    def on_find(self, entry):
+        self.select_text(entry.get_text())
+
+    def replace_callback(self, action, parameter):
+        self.replacebar.set_search_mode(True)
+
+    def on_replace(self, entry):
+        match = self.select_text(self.replace_from.get_text())
+        if match is None:
+            return
+        self.buffer.begin_user_action()
+        self.buffer.delete(match[0], match[1])
+        text = self.replace_to.get_text()
+        if text is not None:
+            self.buffer.insert_at_cursor(text)
+            cursor_mark = self.buffer.get_insert()
+            end = self.buffer.get_iter_at_mark(cursor_mark)
+            start = end.copy()
+            start.backward_chars(len(text))
+            self.textview.scroll_mark_onscreen(cursor_mark)
+            self.buffer.select_range(start, end)
+        self.buffer.end_user_action()
 
     def select_all_callback(self, action, parameter):
         start, end = self.buffer.get_bounds()
@@ -463,7 +513,7 @@ class EditorApplication(Gtk.Application):
             builder.add_from_file(filename)
         except GObject.GError as e:
             try:
-                filename =  self.resourcedir + "/textview-editor.menu.ui"
+                filename = self.resourcedir + "/textview-editor.menu.ui"
                 builder.add_from_file(filename)
             except GObject.GError as e:
                 print("Error: " + e.message)
