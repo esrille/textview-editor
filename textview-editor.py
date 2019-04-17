@@ -29,6 +29,11 @@ from gi.repository import GLib, Gio, Gtk, Gdk, GObject, Pango
 
 class EditorWindow(Gtk.ApplicationWindow):
 
+    # A sentence with more than SENTENCE_SHORT characters is not short.
+    SENTENCE_SHORT = 50
+    # A sentence with more than SENTENCE_LONG characters is long.
+    SENTENCE_LONG = 60
+
     def __init__(self, app, file=None):
         content = ""
 
@@ -99,6 +104,8 @@ class EditorWindow(Gtk.ApplicationWindow):
         self.buffer.connect("delete_range", self.on_delete)
         self.buffer.connect("begin_user_action", self.on_begin_user_action)
         self.buffer.connect("end_user_action", self.on_end_user_action)
+        self.buffer.connect_after("insert_text", self.on_inserted)
+        self.buffer.connect_after("delete_range", self.on_deleted)
 
         actions = {
             "new": self.new_callback,
@@ -124,12 +131,53 @@ class EditorWindow(Gtk.ApplicationWindow):
             self.add_action(action)
         self.connect("delete-event", self.on_delete_event)
 
-        wordwrap_action = Gio.SimpleAction.new_stateful(
+        action = Gio.SimpleAction.new_stateful(
             "wordwrap", None, GLib.Variant.new_boolean(True))
-        wordwrap_action.connect("activate", self.wordwrap_callback)
-        self.add_action(wordwrap_action)
+        action.connect("activate", self.wordwrap_callback)
+        self.add_action(action)
+
+        self.highlightlongsentences_action = Gio.SimpleAction.new_stateful(
+            "highlightlongsentences", None, GLib.Variant.new_boolean(False))
+        self.highlightlongsentences_action.connect(
+            "activate", self.highlightlongsentences_callback)
+        self.add_action(self.highlightlongsentences_action)
 
         self.set_file(file)
+
+        self.tag_yellow = self.buffer.create_tag(
+            "yellow", background="light yellow")
+        self.tag_red = self.buffer.create_tag(
+            "red", background="light pink")
+        self.check_sentences(self.highlightlongsentences_action.get_state())
+
+    def check_sentences(self, highlight):
+        if not highlight:
+            return
+        bounds = self.buffer.get_bounds()
+        self.buffer.remove_all_tags(bounds[0], bounds[1])
+        text = self.buffer.get_text(bounds[0], bounds[1], False)
+        start = end = 0
+        text_length = len(text)
+        for i in range(text_length):
+            c = text[i]
+            if start == end:
+                if c in "\n\r\t 　":
+                    start += 1
+                    end = start
+                    continue
+            end = i + 1
+            if c in "\n\r　 。．？！" or text_length <= end:
+                if c in "\n\r　 ":
+                    end -= 1
+                count = end - start
+                if self.SENTENCE_SHORT < count:
+                    s = self.buffer.get_iter_at_offset(start)
+                    e = self.buffer.get_iter_at_offset(end)
+                    if self.SENTENCE_LONG < count:
+                        self.buffer.apply_tag(self.tag_red, s, e)
+                    else:
+                        self.buffer.apply_tag(self.tag_yellow, s, e)
+                start = end = i + 1
 
     def on_key_press_event(self, widget, event):
         # Control focus around search bars by checking keys typed into the
@@ -179,12 +227,18 @@ class EditorWindow(Gtk.ApplicationWindow):
                               time.perf_counter()])
             self.redo.clear()
 
+    def on_inserted(self, textbuffer, iter, text, length):
+        self.check_sentences(self.highlightlongsentences_action.get_state())
+
     def on_delete(self, textbuffer, start, end):
         if self.user_action:
             text = self.buffer.get_text(start, end, True)
             self.undo.append(["delete_range", start.get_offset(), text,
                               time.perf_counter()])
             self.redo.clear()
+
+    def on_deleted(self, textbuffer, start, end):
+        self.check_sentences(self.highlightlongsentences_action.get_state())
 
     def on_begin_user_action(self, textbuffer):
         self.user_action = True
@@ -455,6 +509,15 @@ class EditorWindow(Gtk.ApplicationWindow):
             self.textview.set_wrap_mode(Gtk.WrapMode.WORD)
         else:
             self.textview.set_wrap_mode(Gtk.WrapMode.NONE)
+
+    def highlightlongsentences_callback(self, action, parameter):
+        highlight = not action.get_state()
+        action.set_state(GLib.Variant.new_boolean(highlight))
+        if highlight:
+            self.check_sentences(highlight)
+        else:
+            bounds = self.buffer.get_bounds()
+            self.buffer.remove_all_tags(bounds[0], bounds[1])
 
     def about_callback(self, action, parameter):
         dialog = Gtk.AboutDialog()
