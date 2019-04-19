@@ -8,6 +8,8 @@ applicationsdir = $(prefix)/share/applications
 icondir = $(prefix)/share/icons/hicolor/96x96/apps
 resourcedir = $(prefix)/share/$(patsubst %.py,%,$(PROGRAM))
 
+all:
+
 install:
 	install -d $(bindir)
 	install $(PROGRAM) $(bindir)/$(patsubst %.py,%,$(PROGRAM))
@@ -25,4 +27,4 @@ uninstall:
 	rm $(addprefix $(resourcedir)/,$(RESOURCES))
 	rmdir $(resourcedir)
 
-.PHONY: install uninstall
+.PHONY: all install uninstall
